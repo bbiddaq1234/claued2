@@ -1,0 +1,56 @@
+/* 13-UI 성격: 대시보드가 아니라 "내 블로그에 대신 글을 올리는 기계의 조종석".
+   색은 장식이 아니라 신호로만 쓴다 (6-13). */
+:root {
+  --bg: #0b0d10;
+  --panel: #14171c;
+  --panel-2: #1b1f26;
+  --border: #262b33;
+  --text: #e8eaed;
+  --text-dim: #9aa3af;
+
+  --safe: #3fb27f; /* 브레이크 걸림(연습 모드) */
+  --armed: #e0603a; /* 실제 발행됨 / 한도 임박 */
+  --live: #d6a419; /* 작업 중 */
+  --act: #5b8def; /* 조작 가능 */
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic",
+    "Segoe UI", Pretendard, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+a {
+  color: var(--act);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--act);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

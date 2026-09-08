@@ -1,0 +1,27 @@
+{
+  "name": "naver-blog-auto",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4123",
+    "build": "next build",
+    "start": "next start -p 4123",
+    "verify": "tsx"
+  },
+  "dependencies": {
+    "next": "15.5.25",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "better-sqlite3": "11.10.0",
+    "playwright": "1.55.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "22.15.30",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.1",
+    "@types/better-sqlite3": "7.6.13",
+    "tsx": "4.20.6"
+  }
+}
