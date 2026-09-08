@@ -124,3 +124,43 @@ export const GenVerdictSchema = z.object({
   reason: z.string(),
 });
 export type GenVerdict = z.infer<typeof GenVerdictSchema>;
+
+// ── 작성 화면 입력 (1장, 6-10) ────────────────────────────────────
+// auto: keyword만. experience/branding: topic+keyContent(+로컬 사진).
+// 자동 발굴에는 photoSource "local"이 없다 — 주제를 미리 모르기 때문이다.
+export const JobInputsSchema = z
+  .object({
+    mode: ModeSchema,
+    keyword: z.string().optional(),
+    topic: z.string().optional(),
+    keyContent: z.string().optional(),
+    photoSource: PhotoSourceSchema,
+    imageStyle: ImageStyleSchema.optional(),
+    localFolder: z.string().optional(),
+    placementMode: z.enum(["order", "ai"]).optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.mode === "auto") {
+      if (!v.keyword?.trim()) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "관심 키워드를 입력하세요.", path: ["keyword"] });
+      }
+      if (v.photoSource === "local") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "자동 발굴에서는 '내 사진'을 쓸 수 없습니다(주제를 미리 모릅니다).",
+          path: ["photoSource"],
+        });
+      }
+    } else {
+      if (!v.topic?.trim()) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "주제를 입력하세요.", path: ["topic"] });
+      }
+      if (!v.keyContent?.trim()) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "핵심 내용을 입력하세요.", path: ["keyContent"] });
+      }
+    }
+    if (v.photoSource === "local" && !v.localFolder?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "사진 폴더를 선택하세요.", path: ["localFolder"] });
+    }
+  });
+export type JobInputs = z.infer<typeof JobInputsSchema>;
