@@ -328,21 +328,21 @@ async function publishStage(
     }
   }
 
-  let blogId: string | undefined;
-  if (!settings.dryRun) {
-    const session = await verifySession();
-    if (!session.valid) {
-      jobLog(jobId, `네이버 로그인이 필요합니다: ${session.reason}`, "error");
-      finalizePost(postId, {
-        status: "failed",
-        note: `네이버 로그인이 필요합니다: ${session.reason}`,
-        published: false,
-      });
-      setJobStage(jobId, { status: "failed", error: session.reason });
-      return;
-    }
-    blogId = session.blogId;
+  // ⚠️ 세션 확인은 연습 모드 여부와 무관하게 항상 필요하다 — 연습 모드도 실제
+  // 에디터 화면까지는 들어가서 스크린샷을 찍는다(2-5). dryRun에 따라 건너뛰는 건
+  // 바로 위의 발행 가드(kill-switch/한도/간격)뿐이다.
+  const session = await verifySession();
+  if (!session.valid) {
+    jobLog(jobId, `네이버 로그인이 필요합니다: ${session.reason}`, "error");
+    finalizePost(postId, {
+      status: "failed",
+      note: `네이버 로그인이 필요합니다: ${session.reason}`,
+      published: false,
+    });
+    setJobStage(jobId, { status: "failed", error: session.reason });
+    return;
   }
+  const blogId = session.blogId;
 
   // ⚠️ 발행 단계에 15분 상한을 건다 — 에디터가 멈추면 잡이 영원히 publishing으로
   // 남는다(6-10).
@@ -357,7 +357,7 @@ async function publishStage(
       dryRun: settings.dryRun,
       headingAsQuote: inputs.mode !== "auto",
       blogId,
-      useNaverSession: !settings.dryRun,
+      useNaverSession: true,
       headless: !settings.showBrowser,
     },
     (msg, level) => jobLog(jobId, msg, level)
