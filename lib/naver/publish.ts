@@ -7,6 +7,7 @@ import { screenshotsDir } from "@/lib/paths";
 import { EDITOR, FRAME_SELECTOR, type VisibilityKey } from "@/lib/naver/selectors";
 import { neutralizeMarkdown, typeSafely } from "@/lib/naver/textUtils";
 import type { Section, ParagraphSectionT } from "@/lib/types";
+import { friendlyError } from "@/lib/friendlyError";
 
 type LogLevel = "info" | "warn" | "error";
 type LogFn = (message: string, level?: LogLevel) => void;
@@ -623,6 +624,14 @@ export async function publishToNaver(input: PublishInput, log: LogFn = () => {})
     }
 
     return { status: "published", blogUrl: publishedUrl, screenshotPath: preShot, note: "발행되었습니다." };
+  } catch (err) {
+    // ⚠️ 여기서 예외를 그대로 던지면 pipeline.ts까지 Playwright 원문 에러(네트워크
+    // 실패 등)가 그대로 전파돼 사용자에게 스택트레이스가 보인다. 실패도 정상적인
+    // PublishOutput으로 돌려준다 — "실패를 성공으로 보고하지 마라"는 실패를 숨기지
+    // 말라는 뜻이지, 원문 에러를 그대로 노출하라는 뜻이 아니다(8-2, 8-6).
+    const { summary, detail } = friendlyError(err);
+    console.error(`[job ${input.jobId}] 발행 중 예외(${detail}):`, err);
+    return { status: "failed", note: summary };
   } finally {
     await context?.close().catch(() => {});
     await browser?.close().catch(() => {});

@@ -26,6 +26,7 @@ import { publishToNaver, checkPublishGuard } from "@/lib/naver/publish";
 import { verifySession } from "@/lib/naver/session";
 import { publishedToday } from "@/lib/ai/cfUsage";
 import type { Draft, Idea, JobInputs, Section, ImageSectionT } from "@/lib/types";
+import { friendlyError } from "@/lib/friendlyError";
 
 // 잡을 만들고 즉시 실행을 시작한다. jobId를 바로 반환하고, 실제 처리는
 // fire-and-forget으로 백그라운드에서 진행된다(진행 상황은 SSE로 본다).
@@ -33,11 +34,11 @@ import type { Draft, Idea, JobInputs, Section, ImageSectionT } from "@/lib/types
 export function startJob(keyword: string, inputs: JobInputs): number {
   const jobId = createJob(keyword, inputs.mode, inputs.mode === "auto", inputs);
   runJob(jobId).catch((err) => {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(`[job ${jobId}] 처리 중 알 수 없는 오류:`, err);
+    const { summary, detail } = friendlyError(err);
+    console.error(`[job ${jobId}] 처리 중 알 수 없는 오류(${detail}):`, err);
     try {
-      jobLog(jobId, `처리 중 알 수 없는 오류로 중단됨: ${message}`, "error");
-      setJobStage(jobId, { status: "failed", error: message });
+      jobLog(jobId, summary, "error");
+      setJobStage(jobId, { status: "failed", error: summary });
     } catch {
       // DB조차 쓸 수 없는 상황이면 더 할 수 있는 게 없다.
     }
@@ -134,9 +135,10 @@ export async function runJob(jobId: number): Promise<void> {
     // 5. 발행
     await publishStage(jobId, draftId, draft, imagePaths, inputs, settings);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    jobLog(jobId, `오류로 중단됐습니다: ${message}`, "error");
-    setJobStage(jobId, { status: "failed", error: message });
+    const { summary, detail } = friendlyError(err);
+    console.error(`[job ${jobId}] 오류로 중단됨(${detail}):`, err);
+    jobLog(jobId, summary, "error");
+    setJobStage(jobId, { status: "failed", error: summary });
   }
 }
 
